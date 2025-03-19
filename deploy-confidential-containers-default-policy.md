@@ -65,7 +65,10 @@ export KEY_VAULT_NAME="keyvault$RANDOM_ID"
 ```
 # Create a resource group
 
-asdfasf
+Call the [az group create](https://learn.microsoft.com/en-us/cli/azure/group?view=azure-cli-latest#az-group-create) command
+```azurecli-interactive
+az group create --name "${RESOURCE_GROUP}" --location "${LOCATION}"
+```
 
 # Deploy a new AKS cluster
 1. Create an AKS cluster using the [az aks create](https://learn.microsoft.com/en-us/cli/azure/aks#az_aks_create) command, specifying:
@@ -137,6 +140,10 @@ Get the OIDC issuer URL and save it to an environmental variable.
     --query 'clientId' \
     --output tsv)"
    ```
+1. Save your managed identity's principal ID as a variable
+   ```azurecli-interactive
+   export MANAGED_ID=$(az identity show --resource-group ${RESOURCE_GROUP} --name ${USER_ASSIGNED_IDENTITY_NAME} --query principalId --output tsv)
+   ```
 
 ## Create a Kubernetes service account
 
@@ -189,9 +196,22 @@ Grant both yourself and the managed identity you created earlier access to the k
        --role "Key Vault Crypto Officer" \
        --scope "${KEYVAULT_RESOURCE_ID}"
    ```
+   And to your managed ID
+   ```azurecli-interactive
+    az role assignment create --assignee "${MANAGED_ID}" \
+       --role "Key Vault Crypto Officer" \
+       --scope "${KEYVAULT_RESOURCE_ID}"
+   ```
 1. Assign the Crypto User role
+   First to your account
    ```azurecli-interactive
       az role assignment create --assignee "${CALLER_OBJECT_ID}" \
+       --role "Key Vault Crypto User" \
+       --scope "${KEYVAULT_RESOURCE_ID}"
+   ```
+   Then to your managed ID
+      ```azurecli-interactive
+      az role assignment create --assignee "${MANAGED_ID}" \
        --role "Key Vault Crypto User" \
        --scope "${KEYVAULT_RESOURCE_ID}"
    ```
