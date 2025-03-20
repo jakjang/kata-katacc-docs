@@ -1,3 +1,5 @@
+*Only instructions and minimal additional text is included to streamline testing/creation. More details can/should be included if this ever gets expanded to be user facing."
+
 # Setup prerequisites
 
 ## Install the aks-preview Azure CLI extension 
