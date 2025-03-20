@@ -61,7 +61,7 @@ export USER_ASSIGNED_IDENTITY_NAME="myIdentity$RANDOM_ID"
 export SERVICE_ACCOUNT_NAMESPACE="kafka"
 export SERVICE_ACCOUNT_NAME="workload-identity-sa$RANDOM_ID"
 export FEDERATED_IDENTITY_CREDENTIAL_NAME="myFedIdentity$RANDOM_ID"
-export KEY_VAULT_NAME="keyvault$RANDOM_ID"
+export KEYVAULT_NAME="keyvault$RANDOM_ID"
 ```
 # Create a resource group
 
