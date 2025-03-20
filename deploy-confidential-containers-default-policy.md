@@ -323,6 +323,7 @@ Prepare the RSA encryption/decryption key using this [bash script](https://githu
    Ensure you update:
       - `SkrClientAKVEndpoint` value to match the URL of your Azure Key Vault, excluding the protocol value `https://`
       - `SkrClientMAAEndpoint` value with the value of your MAA_ENDPOINT
+      - `serviceAccountName` value with your SERVICE_ACCOUNT_NAME's name
 
 1. Generate the security policy for the consumer YAML manifest and store the hash in environmental variable `WORKLOAD_MEASUREMENT`
    ```bash
