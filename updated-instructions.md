@@ -44,6 +44,89 @@ When the status reflects *Registered*, refresh the registration of the *Microsof
 az provider register --namespace "Microsoft.ContainerService"
 ```
 
+# Set up your AKS Resources
+
+## Environmental variables 
+As you go through this exercise, you will find yourself using the same values in many commands. Configuring environmental variables can save you some time.
+*Note: feel free to name the variables whatever you want. Please make sure to make the names memorable, as you will call on them later on.*
+```azurecli-interactive
+export RANDOM_ID="$(openssl rand -hex 3)"
+export RESOURCE_GROUP="myResourceGroup$RANDOM_ID"
+export LOCATION="eastus"
+export CLUSTER_NAME="myAKSCluster$RANDOM_ID"
+export SUBSCRIPTION="$(az account show --query id --output tsv)"
+```
+## Set up your resource group
+*This step assumes you don't already have a resource group and/or cluster setup. If you do, head over to "Deploy to an existing cluster"*
+
+Call the [az group create](https://learn.microsoft.com/en-us/cli/azure/group?view=azure-cli-latest#az-group-create) command
+```azurecli-interactive
+az group create --name "${RESOURCE_GROUP}" --location "${LOCATION}"
+```
+
+## Deploy a new AKS cluster
+1. Create an AKS cluster using the [az aks create](https://learn.microsoft.com/en-us/cli/azure/aks#az_aks_create) command, specifying:
+
+   * **--os-sku**: *AzureLinux*. Only the Azure Linux os-sku supports this feature in this preview release.
+   * **--node-vm-size**: Any Azure VM size that supports AMD SEV-SNP protected child VMs works. For example, [Standard_DC8as_cc_v5][DC8as-series] VMs.
+   * **--enable-workload-identity**: Enables creating a Microsoft Entra Workload ID enabling pods to use a Kubernetes identity.
+   * **--enable-oidc-issuer**: Enables OpenID Connect (OIDC) Issuer. It allows a Microsoft Entra ID or other cloud provider identity and access management platform the ability to discover the API server's public signing keys.
+   * **--workload-runtime**: Specify *KataCcIsolation* to enable the Confidential Containers feature on the node pool.
+
+    ```azurecli-interactive
+   az aks create \
+    --resource-group "${RESOURCE_GROUP}" \
+    --name "${CLUSTER_NAME}" \
+    --kubernetes-version <1.25.0 and above> \
+    --os-sku AzureLinux \
+    --node-vm-size Standard_DC8as_cc_v5 \
+    --workload-runtime KataCcIsolation \
+    --node-count 1 \
+    --enable-oidc-issuer \
+    --enable-workload-identity \
+    --generate-ssh-keys
+   ```
+   After a few minutes, the command completes and returns JSON-formatted information about the cluster.
+
+1. When the cluster is ready, get the cluster credentials using the [az aks get-credentials][az-aks-get-credentials] command.
+
+    ```azurecli-interactive
+    az aks
+    ```
+
+## Deploying to an existing cluster
+If you are deploying to an exsting cluster, enable Confidental Containers by creating a node pool to host it.
+
+1. Add a node pool using the [az aks nodepool add](https://learn.microsoft.com/en-us/cli/azure/aks/nodepool#az_aks_nodepool_add) command. Ensure you include the following parameters:
+      * **--workload-runtime**: Specify *KataCcIsolation* to enable Confidential Containers on the node pool.
+      * **--os-sku**: *AzureLinux*. Only the Azure Linux os-sku supports this feature.
+      * **--node-vm-size**: Any Azure VM size that supports AMD SEV-SNP protected child VMs and nested virtualization will work. [Standard_DC8as_cc_v5](https://learn.microsoft.com/en-us/azure/virtual-machines/dcasccv5-dcadsccv5-series) VMs are one such example.
+
+   ```azurecli-interactive
+   az aks nodepool add \
+   --resource-group ${RESOURCE_GROUP} \
+   --cluster-name ${CLUSTER_NAME} \
+   --name nodepool2 \
+   --node-count 2 \
+   --os-sku AzureLinux \
+   --node-vm-size Standard_DC8as_cc_v5 \
+   --workload-runtime KataCcIsolation
+   ```
+   After a few minutes, the command completes and returns JSON-formatted information about the cluster.
+
+1. Run  the [az aks update](https://learn.microsoft.com/en-us/cli/azure/aks#az_aks_update) command to eanble Confidential Containers on the cluster
+
+   ```azurecli-interactive
+   az aks update --name ${CLUSTER_NAME} --resource-group ${RESOURCE_GROUP}
+   ```
+
+1. When the cluster is ready, get the cluster credentials using the [az aks get-credentials][az-aks-get-credentials] command.
+
+    ```azurecli-interactive
+    az aks get-credentials --resource-group ${RESOURCE_GROUP} --name {CLUSTER_NAME}
+    ```
+
+
 # Set up your environmental variables
 As you go through this exercise, you will find yourself using the same values in many spots. Configuring environmental variables can save you some time. There are also resources that require unique names; functions alongside the environmental variable helps simplify this. 
 
@@ -72,36 +155,8 @@ Call the [az group create](https://learn.microsoft.com/en-us/cli/azure/group?vie
 az group create --name "${RESOURCE_GROUP}" --location "${LOCATION}"
 ```
 
-# Deploy a new AKS cluster
-1. Create an AKS cluster using the [az aks create](https://learn.microsoft.com/en-us/cli/azure/aks#az_aks_create) command, specifying:
 
-   * **--os-sku**: *AzureLinux*. Only the Azure Linux os-sku supports this feature in this preview release.
-   * **--node-vm-size**: Any Azure VM size that supports AMD SEV-SNP protected child VMs works. For example, [Standard_DC8as_cc_v5][DC8as-series] VMs.
-   * **--enable-workload-identity**: Enables creating a Microsoft Entra Workload ID enabling pods to use a Kubernetes identity.
-   * **--enable-oidc-issuer**: Enables OpenID Connect (OIDC) Issuer. It allows a Microsoft Entra ID or other cloud provider identity and access management platform the ability to discover the API server's public signing keys.
-   * **--workload-runtime**: Specify *KataCcIsolation* to enable the Confidential Containers feature on the node pool.
-
-    ```azurecli-interactive
-   az aks create \
-    --resource-group "${RESOURCE_GROUP}" \
-    --name "${CLUSTER_NAME}" \
-    --kubernetes-version <1.25.0 and above> \
-    --os-sku AzureLinux \
-    --node-vm-size Standard_DC8as_cc_v5 \
-    --workload-runtime KataCcIsolation \
-    --node-count 1 \
-    --enable-oidc-issuer \
-    --enable-workload-identity \
-    --generate-ssh-keys
-   ```
-   After a few minutes, the command completes and returns JSON-formatted information about the cluster.
-
-1. When the cluster is ready, get the cluster credentials using the [az aks get-credentials][az-aks-get-credentials] command.
-
-    ```azurecli-interactive
-    az aks get-credentials --resource-group "${RESOURCE_GROUP}" --name ${CLUSTER_NAME}"
-    ```
-3. Create a namespace to run your apps and kafka cluster to run out of. 
+1. Create a namespace to run your apps and kafka cluster to run out of. 
 
  ```azurecli-interactive
     kubectl create namespace kafka
