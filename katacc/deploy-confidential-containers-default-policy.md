@@ -1,4 +1,4 @@
-*Only instructions and minimal additional text is included to streamline testing/creation. More details can/should be included if this ever gets expanded to be user facing.*
+Only instructions and minimal additional text is included to streamline testing/creation. More details can/should be included if this ever gets expanded to be user facing.*
 
 # Setup prerequisites
 
@@ -112,6 +112,7 @@ Confidential Containers uses Azure Key Vault (AKV) and RBAC for public/private k
 
 ## Retrieve the OIDC Issuer URL
 
+*OIDC -> auth protocol that allows users to verify their identity*
 Get the OIDC issuer URL and save it to an environmental variable.
    
    ```azurecli-interactive
@@ -124,6 +125,8 @@ Get the OIDC issuer URL and save it to an environmental variable.
 ## Create a managed identity
 
 1. Create your managed identity.
+
+*Necessary for Azure to auth/n without needing to manage credentials. Entities, allow RBAC access for it*
    
    ```azurecli-interactive
     export SUBSCRIPTION="$(az account show --query id --output tsv)"
@@ -148,6 +151,8 @@ Get the OIDC issuer URL and save it to an environmental variable.
    ```
 
 ## Create a Kubernetes service account
+
+*Account that provides distinct identity in K8s clusters. Used to auth/n and interact with K8s API server, or alllow ID_based security policies.*
 
 ```azurecli-interactive
 cat <<EOF | kubectl apply -f -
