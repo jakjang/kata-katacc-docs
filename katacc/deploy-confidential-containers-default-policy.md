@@ -185,7 +185,7 @@ az identity federated-credential create \
 # Create an Azure Key Vault
 When you make your key vault, ensure you use the *Premium* SKU to ensure support for HSM keys.
 ```azurecli-interactive
-az keyvault create --name "${KEY_VAULT_NAME}" --resource-group "${RESOURCE_GROUP}" --sku "Premium"
+az keyvault create --name "${KEYVAULT_NAME}" --resource-group "${RESOURCE_GROUP}" --sku "Premium"
 ```
 
 ## Configure access in your key vault
